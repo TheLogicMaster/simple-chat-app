@@ -1,0 +1,119 @@
+openapi: "3.0.1"
+info:
+  title: "simple-chat-api"
+  version: "2021-03-22 07:39:20UTC"
+servers:
+- url: "https://qen4qpkx4l.execute-api.us-east-1.amazonaws.com/{basePath}"
+  variables:
+    basePath:
+      default: ""
+paths:
+  /conversation-get:
+    get:
+      responses:
+        default:
+          description: "Default response for GET /conversation-get"
+      security:
+      - jwt-auth: []
+  /conversation-list:
+    get:
+      responses:
+        default:
+          description: "Default response for GET /conversation-list"
+      security:
+      - jwt-auth: []
+  /friend-list:
+    get:
+      responses:
+        default:
+          description: "Default response for GET /friend-list"
+      security:
+      - jwt-auth: []
+  /{proxy+}:
+    options:
+      responses:
+        default:
+          description: "Default response for OPTIONS /{proxy+}"
+  /conversation-create:
+    post:
+      responses:
+        default:
+          description: "Default response for POST /conversation-create"
+      security:
+      - jwt-auth: []
+      x-amazon-apigateway-integration:
+        payloadFormatVersion: "2.0"
+        type: "aws_proxy"
+        httpMethod: "POST"
+        uri: "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:071640228332:function:conversation-create/invocations"
+        connectionType: "INTERNET"
+  /conversation-delete:
+    post:
+      responses:
+        default:
+          description: "Default response for POST /conversation-delete"
+      security:
+      - jwt-auth: []
+      x-amazon-apigateway-integration:
+        payloadFormatVersion: "2.0"
+        type: "aws_proxy"
+        httpMethod: "POST"
+        uri: "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:071640228332:function:conversation-delete/invocations"
+        connectionType: "INTERNET"
+  /conversation-invite:
+    post:
+      responses:
+        default:
+          description: "Default response for POST /conversation-invite"
+      security:
+      - jwt-auth: []
+  /conversation-leave:
+    post:
+      responses:
+        default:
+          description: "Default response for POST /conversation-leave"
+      security:
+      - jwt-auth: []
+  /conversation-send:
+    post:
+      responses:
+        default:
+          description: "Default response for POST /conversation-send"
+      security:
+      - jwt-auth: []
+  /friend-add:
+    post:
+      responses:
+        default:
+          description: "Default response for POST /friend-add"
+      security:
+      - jwt-auth: []
+  /friend-delete:
+    post:
+      responses:
+        default:
+          description: "Default response for POST /friend-delete"
+      security:
+      - jwt-auth: []
+components:
+  securitySchemes:
+    jwt-auth:
+      type: "oauth2"
+      flows: {}
+      x-amazon-apigateway-authorizer:
+        identitySource: "$request.header.Authorization"
+        jwtConfiguration:
+          audience:
+          - "{CLIENT}"
+          issuer: "https://cognito-idp.us-east-1.amazonaws.com/{POOL}"
+        type: "jwt"
+x-amazon-apigateway-cors:
+  allowMethods:
+  - "*"
+  allowHeaders:
+  - "*"
+  maxAge: 0
+  allowCredentials: false
+  allowOrigins:
+  - "*"
+x-amazon-apigateway-importexport-version: "1.0"
