@@ -19,7 +19,7 @@
           <q-avatar color="red" text-color="white" icon="settings" />
         </q-btn>
 
-        <div>{{ $store.state.user.username }}</div>
+        <div v-if="$store.state.user">{{ $store.state.user.username }}</div>
       </q-toolbar>
     </q-header>
 
@@ -30,6 +30,13 @@
       content-class="bg-grey-1"
     >
       <q-list>
+        <q-item clickable v-ripple to="/">
+          <q-item-section avatar>
+            <q-icon name="home" />
+          </q-item-section>
+          <q-item-section>Home</q-item-section>
+        </q-item>
+
         <q-item clickable v-ripple exact @click="logout">
           <q-item-section avatar>
             <q-icon name="logout" />

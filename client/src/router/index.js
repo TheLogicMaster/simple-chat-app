@@ -1,8 +1,8 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-
 import routes from './routes'
 import { Auth } from '@aws-amplify/auth'
+import { utils } from 'boot/utils'
 
 Vue.use(VueRouter)
 

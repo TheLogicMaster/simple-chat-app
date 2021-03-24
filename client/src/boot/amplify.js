@@ -19,10 +19,10 @@ Amplify.configure({
     //identityPoolRegion: 'XX-XXXX-X',
 
     // OPTIONAL - Amazon Cognito User Pool ID
-    userPoolId: 'us-east-1_u90hX9ncg',
+    userPoolId: process.env.COGNITO_POOL,
 
     // OPTIONAL - Amazon Cognito Web Client ID (26-char alphanumeric string)
-    userPoolWebClientId: 'pc2bamjhg4lv87t8ql98dhkcb',
+    userPoolWebClientId: process.env.COGNITO_CLIENT,
 
     // OPTIONAL - Enforce user authentication prior to accessing AWS resources or not
     //mandatorySignIn: false,
@@ -65,7 +65,7 @@ Amplify.configure({
     endpoints: [
       {
         name: "api",
-        endpoint: "https://3bgazo8k47.execute-api.us-east-1.amazonaws.com/conversation-create",
+        endpoint: process.env.API + "/",
         custom_header: async () => {
           //return { Authorization : 'token' }
           // Alternatively, with Cognito User Pools use this:

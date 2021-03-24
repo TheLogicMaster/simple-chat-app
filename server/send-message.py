@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 import boto3
 from botocore.exceptions import ClientError
 
@@ -15,29 +16,41 @@ def lambda_handler(event, context):
     username = event['requestContext']['authorizer']['jwt']['claims']['cognito:username']
 
     # Verify client input
-    if 'conversation' not in data:
+    if 'conversation' not in data or 'message' not in data:
         return {'statusCode': 400}
 
     conversation_id = data['conversation']
+    message = data['message']
 
     # Verify client input types
-    if type(conversation_id) is not str:
+    if type(conversation_id) is not str or type(message) is not str:
         return {'statusCode': 400}
 
     key = {'id': conversation_id}
 
     try:
+        response = table.get_item(Key=key, AttributesToGet=['users'])
+
         # Ensure conversation exists
-        response = table.get_item(Key=key)
         if 'Item' not in response:
             return {'statusCode': 404, 'body': 'No such conversation'}
 
-        # Ensure user is admin
-        if username not in response['Item']['admins']:
+        # Ensure user is in conversation
+        if username not in response['Item']['users']:
             return {'statusCode': 401}
 
-        # Delete conversation
-        table.delete_item(Key=key)
+        # Update conversation
+        table.update_item(
+            Key=key,
+            UpdateExpression='set #messages = list_append(#messages, :message)',
+            ExpressionAttributeValues={':message': [{
+                'type': 'text',
+                'user': username,
+                'timestamp': int(datetime.now().timestamp()),
+                'content': message
+            }]},
+            ExpressionAttributeNames={'#messages': 'messages'}
+        )
         return 'OK'
     except ClientError as e:
         print(e.response['Error']['Message'])

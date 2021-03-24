@@ -7,6 +7,9 @@
 // https://quasar.dev/quasar-cli/quasar-conf-js
 /* eslint-env node */
 
+const DotEnv = require('dotenv')
+const parsedEnv = DotEnv.config({ path: 'local.env' }).parsed
+
 module.exports = function (/* ctx */) {
   return {
     // https://quasar.dev/quasar-cli/supporting-ts
@@ -19,7 +22,7 @@ module.exports = function (/* ctx */) {
     // --> boot files are part of "main.js"
     // https://quasar.dev/quasar-cli/boot-files
     boot: [
-
+      'utils',
       'axios',
       'amplify'
     ],
@@ -45,6 +48,12 @@ module.exports = function (/* ctx */) {
 
     // Full list of options: https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-build
     build: {
+      env: {
+        COGNITO_POOL: parsedEnv && parsedEnv.cognitoPool ? parsedEnv.cognitoPool : '',
+        COGNITO_CLIENT: parsedEnv && parsedEnv.cognitoClient ? parsedEnv.cognitoClient : '',
+        API: parsedEnv && parsedEnv.api ? parsedEnv.api : ''
+      },
+
       vueRouterMode: 'hash', // available values: 'hash', 'history'
 
       // transpile: false,

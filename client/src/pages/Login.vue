@@ -1,6 +1,15 @@
 <template>
   <div class="flex flex-center">
-    <amplify-authenticator/>
+    <amplify-authenticator>
+      <amplify-sign-up
+        slot="sign-up"
+        :form-fields.prop="signupFields"
+      ></amplify-sign-up>
+      <amplify-sign-in
+        slot="sign-in"
+        :form-fields.prop="signInFields"
+      ></amplify-sign-in>
+    </amplify-authenticator>
   </div>
 </template>
 
@@ -13,7 +22,7 @@ export default {
     this.unsubscribeAuth = onAuthUIStateChange(async (authState, authData) => {
       if (authState === 'signedin' && !this.loggedIn) {
         this.loggedIn = true
-        // Todo: Vuex data
+        await this.$store.dispatch('login')
         await this.$router.push('/')
       }
     })
@@ -21,7 +30,22 @@ export default {
   data () {
     return {
       unsubscribeAuth: null,
-      loggedIn: false
+      loggedIn: false,
+      signupFields: [
+        { type: "username" },
+        { type: "password" },
+        {
+          type: "email",
+          required: true
+        }
+      ],
+      signInFields: [
+        {
+          type: "username",
+          placeholder: "Enter username or email"
+        },
+        { type: "password" }
+      ]
     }
   },
   beforeDestroy () {

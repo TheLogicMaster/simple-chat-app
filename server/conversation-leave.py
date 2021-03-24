@@ -27,17 +27,35 @@ def lambda_handler(event, context):
     key = {'id': conversation_id}
 
     try:
-        # Ensure conversation exists
-        response = table.get_item(Key=key)
+        response = table.get_item(Key=key, AttributesToGet=['users', 'admins'])
+
         if 'Item' not in response:
             return {'statusCode': 404, 'body': 'No such conversation'}
 
-        # Ensure user is admin
-        if username not in response['Item']['admins']:
+        admins = response['Item']['admins']
+        users = response['Item']['users']
+
+        # Ensure user is in conversation
+        if username not in users:
             return {'statusCode': 401}
 
-        # Delete conversation
-        table.delete_item(Key=key)
+        # Ensure user isn't the only admin
+        if username in admins and len(admins) == 1:
+            return {'statusCode': 200, 'body': 'Can\'t remove the only admin from a conversation'}
+
+        admins.remove(username)
+        users.remove(username)
+
+        # Update conversation
+        table.update_item(
+            Key=key,
+            UpdateExpression="set #users=:users, admins=:admins",
+            ExpressionAttributeValues={
+                ":users": users,
+                ":admins": admins
+            },
+            ExpressionAttributeNames={'#users': 'users'}
+        )
         return 'OK'
     except ClientError as e:
         print(e.response['Error']['Message'])
