@@ -16,7 +16,8 @@
     "core-js": "^3.6.5",
     "quasar": "^1.0.0",
     "aws-amplify": "^3.3.25",
-    "@aws-amplify/ui-components": "^1.1.0"
+    "@aws-amplify/ui-components": "^1.1.0",
+    "vue-moment": "^4.1.0"
   },
   "devDependencies": {
     "@quasar/app": "^2.0.0",

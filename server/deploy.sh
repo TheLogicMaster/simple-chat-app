@@ -15,7 +15,7 @@ echo "Created role: ${role}"
 
 echo "Adding role permissions..."
 for permission in AmazonDynamoDBFullAccess AmazonCognitoReadOnly AWSXRayDaemonWriteAccess \
-  service-role/AWSLambdaBasicExecutionRole CloudWatchLambdaInsightsExecutionRolePolicy; do
+  service-role/AWSLambdaBasicExecutionRole CloudWatchLambdaInsightsExecutionRolePolicy AmazonS3FullAccess; do
   aws iam attach-role-policy \
     --role-name simple-chat \
     --policy-arn "arn:aws:iam::aws:policy/${permission}" || exit
@@ -37,6 +37,8 @@ for f in *.py; do
     --role "${role}" >&- || exit
   if [[ $name == on-user-confirmed ]]; then
     service="cognito-idp"
+  elif [[ $name == on-image-upload ]]; then
+    service="s3"
   else
     service="apigateway"
   fi
@@ -67,6 +69,24 @@ aws dynamodb create-table \
   --attribute-definitions AttributeName=username,AttributeType=S \
   --key-schema AttributeName=username,KeyType=HASH \
   --provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=1 >&- || exit
+
+echo "Creating S3 Bucket..."
+bucket=$(aws s3api create-bucket \
+  --bucket simple-app-bucket-$((1 + RANDOM % 100000000)) \
+  --query "Location" \
+  --output text) || exit
+bucket="${bucket:1}"
+echo "Created Bucket: ${bucket}"
+
+echo "Configuring Bucket..."
+aws s3api put-bucket-cors \
+  --bucket "${bucket}" \
+  --cors-configuration '{"CORSRules":[{"AllowedOrigins":["*"],"AllowedHeaders":["*"],"AllowedMethods":
+  ["GET","PUT","POST","DELETE"],"MaxAgeSeconds":3000}]}' >&- || exit
+aws s3api put-bucket-notification-configuration \
+  --bucket "${bucket}" \
+  --notification-configuration "{\"LambdaFunctionConfigurations\":[{\"Id\":\"on-image-upload\",\"LambdaFunctionArn\":
+  \"arn:aws:lambda:us-east-1:${id}:function:on-image-upload\",\"Events\":[\"s3:ObjectCreated:Post\"]}]}" >&- || exit
 
 echo "Creating Cognito user pool..."
 cognitoPool=$(aws cognito-idp create-user-pool \
@@ -104,12 +124,13 @@ api=$(aws apigatewayv2 import-api \
 rm ./api.yaml
 apiId=$(jq -r ".[0]" <<<"${api}")
 apiEndpoint=$(jq -r ".[1]" <<<"${api}")
+echo "Created API with endpoint: ${apiEndpoint}"
+
 echo "Creating API Stage..."
 aws apigatewayv2 create-stage \
   --api-id "${apiId}" \
   --stage-name "\$default" \
   --auto-deploy >&- || exit
-echo "Created API with endpoint: ${apiEndpoint}"
 
 echo "Writing API details to client env file..."
 echo "api=${apiEndpoint}" >../client/local.env || exit
@@ -130,9 +151,13 @@ amplifyId=$(aws amplify create-app \
   --name simple-chat-app \
   --query "app.appId" \
   --output text) || exit
+
+echo "Creating Amplify branch..."
 aws amplify create-branch \
   --app-id "${amplifyId}" \
   --branch-name prod >&- || exit
+
+echo "Creating Amplify deployment..."
 uploadUrl=$(aws amplify create-deployment \
   --app-id "${amplifyId}" \
   --branch-name prod \
@@ -153,7 +178,7 @@ echo "App URL: https://prod.${amplifyId}.amplifyapp.com"
 
 echo "Waiting for database readiness..."
 aws dynamodb wait table-exists \
-    --table-name simple-chat-users
+  --table-name simple-chat-users
 
 echo "Creating test users..."
 for username in thelogicmaster byteme; do
@@ -162,10 +187,13 @@ for username in thelogicmaster byteme; do
     --username "${username}" \
     --temporary-password password \
     --user-attributes "Name=email,Value=example@example.com" >&- || exit
-  aws dynamodb put-item \
-    --table-name simple-chat-users \
-    --item "{\"username\":{\"S\":\"${username}\"},\"friends\":{\"L\":[]}}" || exit
 done
+aws dynamodb put-item \
+  --table-name simple-chat-users \
+  --item "{\"username\":{\"S\":\"thelogicmaster\"},\"friends\":{\"L\":[{\"S\":\"byteme\"}]}}" || exit
+aws dynamodb put-item \
+  --table-name simple-chat-users \
+  --item "{\"username\":{\"S\":\"byteme\"},\"friends\":{\"L\":[{\"S\":\"thelogicmaster\"}]}}" || exit
 echo "Created users 'thelogicmaster' and 'byteme' with temporary password 'password'"
 
 echo "Successfully created app AWS stack!"

@@ -32,7 +32,7 @@ def lambda_handler(event, context):
     if type(conversation_id) is not str:
         return {'statusCode': 400}
 
-    try:
+    try:  # Todo: Filter messages using a 'since' parameter to only get new messages
         response = table.get_item(Key={'id': conversation_id})
     except ClientError as e:
         print(e.response['Error']['Message'])

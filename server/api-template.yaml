@@ -4,7 +4,7 @@ info:
   version: "2021-03-22 07:39:20UTC"
 paths:
   /conversation-get:
-    get:
+    post:
       responses:
         default:
           description: "Get a conversation"
@@ -17,7 +17,7 @@ paths:
         uri: "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:{ID}:function:conversation-get/invocations"
         connectionType: "INTERNET"
   /conversation-list:
-    get:
+    post:
       responses:
         default:
           description: "Get conversations list"
@@ -30,7 +30,7 @@ paths:
         uri: "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:{ID}:function:conversation-list/invocations"
         connectionType: "INTERNET"
   /friend-list:
-    get:
+    post:
       responses:
         default:
           description: "Get friends list"
@@ -99,6 +99,19 @@ paths:
         httpMethod: "POST"
         uri: "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:{ID}:function:conversation-leave/invocations"
         connectionType: "INTERNET"
+  /direct-messages-get:
+    post:
+      responses:
+        default:
+          description: "Get a DM conversation"
+      security:
+      - jwt-auth: []
+      x-amazon-apigateway-integration:
+        payloadFormatVersion: "2.0"
+        type: "aws_proxy"
+        httpMethod: "POST"
+        uri: "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:{ID}:function:direct-messages-get/invocations"
+        connectionType: "INTERNET"
   /send-message:
     post:
       responses:
@@ -111,6 +124,19 @@ paths:
         type: "aws_proxy"
         httpMethod: "POST"
         uri: "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:{ID}:function:send-message/invocations"
+        connectionType: "INTERNET"
+  /send-image:
+    post:
+      responses:
+        default:
+          description: "Send an image in a conversation"
+      security:
+      - jwt-auth: []
+      x-amazon-apigateway-integration:
+        payloadFormatVersion: "2.0"
+        type: "aws_proxy"
+        httpMethod: "POST"
+        uri: "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:{ID}:function:send-image/invocations"
         connectionType: "INTERNET"
   /friend-add:
     post:

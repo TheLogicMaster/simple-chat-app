@@ -11,7 +11,7 @@ def lambda_handler(event, context):
 
     try:
         response = table.scan(
-            ProjectionExpression="#id, #name, #users, admins",
+            ProjectionExpression="#id, #name, #users, admins, dm",
             FilterExpression=Attr('users').contains(username),
             ExpressionAttributeNames={'#id': 'id', '#name': 'name', '#users': 'users'}
         )

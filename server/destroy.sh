@@ -5,7 +5,7 @@ export AWS_PAGER=""
 
 echo "Deleting role..."
 for permission in AmazonDynamoDBFullAccess AmazonCognitoReadOnly AWSXRayDaemonWriteAccess \
-  service-role/AWSLambdaBasicExecutionRole CloudWatchLambdaInsightsExecutionRolePolicy; do
+  service-role/AWSLambdaBasicExecutionRole CloudWatchLambdaInsightsExecutionRolePolicy AmazonS3FullAccess; do
   aws iam detach-role-policy \
     --role-name simple-chat \
     --policy-arn "arn:aws:iam::aws:policy/${permission}" >&-
@@ -21,7 +21,6 @@ for f in *.py; do
     --function-name "${name}" >&-
 done
 
-# Todo: Create generic function for finding IDs
 echo "Deleting user pool..."
 pools=$(aws cognito-idp list-user-pools \
   --max-results 60 \
@@ -42,6 +41,18 @@ aws dynamodb delete-table \
   --table-name simple-chat-conversations >&-
 aws dynamodb delete-table \
   --table-name simple-chat-users >&-
+
+echo "Deleting S3 Bucket..."
+buckets=$(aws s3api list-buckets \
+  --output json) || exit
+for k in $(jq ".Buckets | keys | .[]" <<<"${buckets}"); do
+  name=$(jq -r ".Buckets[${k}].Name" <<<"${buckets}")
+  if [[ "${name}" == simple-app-bucket-* ]]; then
+    echo "Deleting Bucket: ${name}..."
+    aws s3 rb "s3://${name}" \
+      --force  >&-
+  fi
+done
 
 echo "Deleting user API..."
 apis=$(aws apigatewayv2 get-apis \

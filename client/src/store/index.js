@@ -20,7 +20,8 @@ export default async function (/* { ssrContext } */) {
   const Store = new Vuex.Store({
     state: {
       user: null,
-      conversations: []
+      conversations: [],
+      friends: []
     },
     getters: {
       getConversation: state => id => {
@@ -28,16 +29,17 @@ export default async function (/* { ssrContext } */) {
       }
     },
     actions: {
-      async login ({ commit }) {
+      async login ({ commit, dispatch }) {
         const info = await Auth.currentUserInfo()
         commit('set', ['user', {
           username: info.username
         }])
+        await dispatch('updateFriendsList')
       },
       async updateConversationList ({ commit, getters }) {
         try {
           const response = await API
-            .get('api', 'conversation-list', {
+            .post('api', 'conversation-list', {
               /*headers: {},
               body: {
                 conversation: '1234'
@@ -58,19 +60,46 @@ export default async function (/* { ssrContext } */) {
           console.error(e)
         }
       },
-      async updateConversations({ state, dispatch }) {
-        for (let conversation of state.conversations)
-          await dispatch('updateConversation', conversation.id)
+      async updateConversations({ state, dispatch, commit }) {
+        try {
+          await dispatch('updateConversationList')
+          const conversations = []
+          for (let conversation of state.conversations)
+            conversations.push(await API
+              .post('api', 'conversation-get', {
+                body: {
+                  conversation: conversation.id
+                }
+              }))
+          commit('set', ['conversations', conversations])
+          return true
+        } catch (e) {
+          console.error(e)
+        }
       },
       async updateConversation ({ commit, state }, id) {
         try {
           const response = await API
-            .get('api', 'conversation-get', {
+            .post('api', 'conversation-get', {
               body: {
                 conversation: id
               }
             })
-          commit('set', ['conversations', state.conversations.filter(conversation => conversation.id !== response.id).push(response)])
+          let conversations = state.conversations.filter(conversation => conversation.id !== response.id)
+          conversations.push(response)
+          commit('set', ['conversations', conversations])
+          return true
+        } catch (e) {
+          console.error(e)
+        }
+      },
+      async updateFriendsList ({ commit }) {
+        if (!await Auth.currentUserInfo())
+          return
+        try {
+          const response = await API
+            .post('api', 'friend-list', {})
+          commit('set', ['friends', response])
           return true
         } catch (e) {
           console.error(e)

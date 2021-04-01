@@ -24,7 +24,8 @@ module.exports = function (/* ctx */) {
     boot: [
       'utils',
       'axios',
-      'amplify'
+      'amplify',
+      'moment'
     ],
 
     // https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-css
@@ -93,7 +94,9 @@ module.exports = function (/* ctx */) {
     framework: {
       iconSet: 'material-icons', // Quasar icon set
       lang: 'en-us', // Quasar language pack
-      config: {},
+      config: {
+        loadingBar: { skipHijack: true }
+      },
 
       // Possible values for "importStrategy":
       // * 'auto' - (DEFAULT) Auto-import needed Quasar components & directives

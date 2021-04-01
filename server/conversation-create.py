@@ -32,7 +32,7 @@ def lambda_handler(event, context):
             return {'statusCode': 400}
 
     try:
-        # Generate unique id
+        # Generate unique id, though the chance of a duplicate should be nonexistent
         while True:
             conversation_id = str(uuid.uuid4())
             response = table.get_item(Key={'id': conversation_id})
@@ -49,6 +49,7 @@ def lambda_handler(event, context):
             'admins': [username],
             'users': users,
             'name': name,
+            'dm': False,
             'messages': []
         })
         return json.dumps({'id': conversation_id})
